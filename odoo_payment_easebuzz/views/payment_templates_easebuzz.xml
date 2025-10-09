@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="method_inline_form">
+        <t t-set="warning" t-value="pm_sudo._easebuzz_get_minimum_amount_warning(amount, currency, provider_sudo._get_code())" />
+        <div t-if="warning" t-out="warning" class="alert alert-danger mb-0"/>
+    </template>
+
+</odoo>
