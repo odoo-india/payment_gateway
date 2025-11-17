@@ -39,15 +39,11 @@ patch(PaymentForm.prototype, {
             return;
         }
         await loadJS('https://sdk.cashfree.com/js/v3/cashfree.js');
-        const cashfree = Cashfree({ mode: "sandbox" });
+        const cashfree = Cashfree({ mode: processingValues.txn_env });
         const cashfreeOptions = this._prepareCashFreeOptions(processingValues);
         cashfree.checkout(cashfreeOptions).then((result) => {
-            const returnUrl = window.location.origin + "/payment/cashfree/return";
-            if(result.error){
-                const errorUrl = returnUrl + "?orderId=" + processingValues.order_id + "&status=error";
-                window.location = errorUrl;
-            }else{
-                window.location = returnUrl;
+            if(result.paymentDetails){
+                window.location = window.location.origin + '/payment/status';
             }
         });
     },
@@ -61,8 +57,6 @@ patch(PaymentForm.prototype, {
         return {
             paymentSessionId: processingValues.payment_session_Id,
             redirectTarget: "_modal",
-            savePaymentInstrument: true,
-            returnUrl: window.location.origin + "/payment/cashfree/return"
         }
     },
 });

@@ -22,13 +22,15 @@ class PaymentProvider(models.Model):
 
     cashfree_client_id = fields.Char(
         string="Cashfree Client Id",
-        required_if_provider='cashfree'
+        required_if_provider='cashfree',
+        copy=False
     )
 
     cashfree_client_secret = fields.Char(
         string="CashFree Client Secret",
         required_if_provider='cashfree',
-        groups='base.group_system'
+        groups='base.group_system',
+        copy=False
     )
 
     # === COMPUTE METHODS === #
@@ -87,17 +89,14 @@ class PaymentProvider(models.Model):
             return super()._parse_response_error(response)
         return response.json().get('message', '')
 
-    def _cf_generate_digital_sign(self, values, incoming=True):
+    def _cf_generate_digital_sign(self, raw_payload, timestamp):
         """ Generate the shasign for incoming or outgoing communications.
 
-        :param dict values: The values used to generate the signature
-        :param bool incoming: Whether the signature must be generated for an incoming (Buckaroo to
-                              Odoo) or outgoing (Odoo to Buckaroo) communication.
+        :param dict raw_payload: The payload used to generate the signature
+        :param str timestamp: The timestamp provided by Cashfree.
         :return: The shasign
         :rtype: str
         """
-        raw_payload = values.get_data().decode('utf-8')
-        timestamp = values.headers.get('x-webhook-timestamp')
         if not timestamp or not raw_payload:
             _logger.error("Missing required webhook components.")
             return "Missing components", 400

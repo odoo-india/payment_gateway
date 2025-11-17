@@ -3,9 +3,10 @@
 import json
 import logging
 import pprint
+import re
 
 from odoo import _, api, models
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.odoo_payment_cashfree import const
@@ -43,7 +44,7 @@ class PaymentTransaction(models.Model):
         return {
             'order_id': order_data.get('order_id'),
             'payment_session_Id': order_data.get('payment_session_id'),
-            'type': 'IFRAME',
+            'txn_env': 'sandbox' if self.provider_id.state == 'test' else 'production'
         }
 
     def _cashfree_create_payment_order(self):
@@ -74,21 +75,18 @@ class PaymentTransaction(models.Model):
         """
         pm_code = (self.payment_method_id.primary_payment_method_id or self.payment_method_id).code
         cashfree_pm_code = const.PAYMENT_METHOD_CODES_MAPPING[pm_code]
-        if self.partner_phone:
-            customer_phone = self.partner_phone.replace(" ", "")
-        else:
-            raise UserError(_("Please add customer number"))
+        formatted_phone_number = re.sub(r'[^0-9+]', '', self.partner_phone) if self.partner_phone else ''
         payload = {
-            "order_id": self.reference,
-            "order_amount": str(self.amount),
-            "order_currency": self.currency_id.name,
-            "customer_details": {
-                "customer_id": "cf" + str(self.partner_id.id),  # Prefix 'cf' to ensure customer_id contains at least 3 alphanumeric characters as required by Cashfree
-                "customer_email": self.partner_email,
-                "customer_phone": customer_phone
+            'order_id': self.reference,
+            'order_amount': str(self.amount),
+            'order_currency': self.currency_id.name,
+            'customer_details': {
+                'customer_id': 'cf' + str(self.partner_id.id),  # Prefix 'cf' to ensure customer_id contains at least 3 alphanumeric characters as required by Cashfree
+                'customer_email': self.partner_email or '',
+                'customer_phone': formatted_phone_number
             },
-            "order_meta": {
-                "payment_methods": cashfree_pm_code,
+            'order_meta': {
+                'payment_methods': cashfree_pm_code,
             }
         }
         return payload
@@ -119,7 +117,7 @@ class PaymentTransaction(models.Model):
             if not refund_id:
                 _logger.error("Cashfree: Missing refund_id in refund data: %s", payment_data)
                 raise ValidationError(_("Cashfree: Missing refund_id in refund data."))
-            tx = self.search([('reference', '=', refund_id)], limit=1)
+            tx = self.search([('reference', '=', refund_id), ('provider_code', '=', 'cashfree')], limit=1)
         else:
             _logger.warning("Received data with missing merchant reference")
             tx = self
@@ -153,7 +151,6 @@ class PaymentTransaction(models.Model):
     def _apply_updates(self, payment_data):
         if self.provider_code != 'cashfree':
             return super()._apply_updates(payment_data)
-
         entity_type = payment_data.get('entity_type', 'payment')
         data = payment_data.get('data', {})
 
@@ -174,20 +171,28 @@ class PaymentTransaction(models.Model):
 
         # Update the payment state.
         entity_status = data.get('payment', {}).get('payment_status', '') if entity_type == "payment" else data.get('refund', {}).get('refund_status', '')
+
         if not entity_status:
-            raise ValidationError(_("CashFree: Received data with missing status."))
+            self._set_error(_("Received data with missing status."))
+
         if entity_status in const.PAYMENT_STATUS_MAPPING['done']:
-            if (self.provider_id.allow_tokenization):
-                # In case the tokenization was requested on provider side not from odoo form.
-                self.tokenize = True
             self._set_done()
             if self.operation == 'refund':
                 self.env.ref('payment.cron_post_process_payment_tx')._trigger()
-        if entity_type != "payment":
-            if entity_status in const.PAYMENT_STATUS_MAPPING['pending']:
-                self._set_pending()
-            elif entity_status in const.PAYMENT_STATUS_MAPPING['error']:
-                self._set_canceled()
+        elif entity_status in const.PAYMENT_STATUS_MAPPING['cancel']:
+            self._set_canceled()
+        elif entity_status in const.RESULT_CODES_MAPPING['pending']:
+            self._set_pending()
+        elif entity_status in const.PAYMENT_STATUS_MAPPING['error']:
+            self._set_error(_("The transaction could not be processed due to an error. Please try again later."))
+        else:
+            _logger.warning(
+                "Received data for transaction with reference %s with invalid payment status: %s",
+                self.reference, entity_status
+            )
+            self._set_error(
+                "CashFree: " + _("Received data with invalid status: %s", entity_status)
+            )
 
     def _send_refund_request(self):
         """ Override of `payment` to send a refund request to cashfree.
