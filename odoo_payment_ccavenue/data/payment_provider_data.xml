@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Kanban View of payment provider -->
+    <record id="payment_provider_ccavenue" model="payment.provider">
+        <field name="code">ccavenue</field>
+        <field name="name">CCAvenue</field>
+        <field name="redirect_form_view_id" ref="redirect_form"/>
+        <field name="image_128" type="base64" file="odoo_payment_ccavenue/static/description/icon.png"/>
+        <field name="module_id" ref="base.module_odoo_payment_ccavenue"/>
+        <field name="state">disabled</field>
+        <field name="payment_method_ids" 
+               eval="[Command.set([
+                         ref('payment.payment_method_card'),
+                         ref('payment.payment_method_netbanking'),
+                         ref('payment.payment_method_upi')
+                    ])]"
+        />
+    </record>
+</odoo>

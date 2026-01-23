@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="redirect_form">
+        <form t-att-action="api_url" method="post">
+            <input type="hidden" name="encRequest" t-att-value="encrypted_request"/>
+            <input type="hidden" name="access_code" t-att-value="access_code"/>
+        </form>
+    </template>
+</odoo>

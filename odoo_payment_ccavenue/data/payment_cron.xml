@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record model="ir.cron" id="cron_ccavenue_poll_refund_status">
+        <field name="name">Payment: CCAvenue Poll Payment Status</field>
+        <field name="model_id" ref="payment.model_payment_transaction" />
+        <field name="state">code</field>
+        <field name="code">model._ccavenue_poll_refund_status()</field>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

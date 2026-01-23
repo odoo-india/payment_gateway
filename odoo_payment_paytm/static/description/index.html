@@ -1,0 +1,90 @@
+<div class="container mt-4" style="font-size: 16px;">
+
+    <h2 class="oe_slogan mb-3" style="font-weight: bold; color: currentColor;">Paytm Payment Gateway Integration</h2>
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on the Paytm dashboard</h4>
+
+    <h5 class="mt-3" style="font-size: 20px;">How to Access Credentials?</h5>
+    <p class="mb-1">
+        For your onboarding, we invite you to book an appointment using the link provided. During this session, our team will guide you through the onboarding steps and assist with any setup or clarification you may need:
+        <br />
+        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
+            <code>https://www.odoo.com/book/india-payment-provider</code>
+        </a>
+    </p>
+
+    <p class="mb-0">
+       Upon signing in into your Paytm dashboard, navigate to <strong style="font-weight: bold;">Developer Settings &#8594; API Keys</strong> (located on the left side of dashboard) where you would find your both <strong style="font-weight: bold;">Staging and Production environment credentials</strong>.
+    </p>
+
+    <p class="mt-2 mb-0">
+        Make sure to note your <strong style="font-weight: bold;">Environment</strong> - use the <strong style="font-weight: bold;">Staging</strong> credentials for testing and switch to <strong style="font-weight: bold;">Production</strong> once you're ready to go live.
+    </p>
+    <p class="mt-2 mb-0">
+        In order to view transactions of staging environment, you need to toggle TEST DATA on the top right corner of dashboard
+    </p>
+    <img src="screenshots/provider-credentials.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+    <h5 class="mt-4" style="font-size: 20px;">Payment Gateway Access</h5>
+    <h5 class="mt-4" style="font-size: 20px;">Configure Webhook</h5>
+
+    <div class="alert alert-info" style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin-top: 20px;">
+        <p class="mb-0">
+            <strong style="font-weight: bold;">Note for Webhooks:</strong><br/>
+            Paytm merchant account must be activated in order to access webhook URL configuration.<br/>
+            <br/>
+            On Paytm Merchant Dashboard, the webhook configuration in <strong>Developer settings &#8594; webhook URL</strong> points to the <strong>Production environment</strong> only.
+            To configure webhooks for the <strong>staging environment</strong>, you must contact the Paytm support team directly to set up your webhook URL.
+        </p>
+    </div>
+    <ol class="px-3">
+        <li>Log in to your Paytm Merchant Dashboard.</li>
+        <li>From the left side panel, click the <strong style="font-weight: bold;">Developer Settings</strong> option.</li>
+        <li>Select <strong style="font-weight: bold;">Webhook URL</strong>.</li>
+        <li>
+            For both <strong>Payment Notification URL</strong> and <strong>Refund Notification URL</strong>, click <strong>Add</strong> and enter your Odoo database URL followed by
+            <code>/payment/paytm/webhook</code>.<br>
+            For example: <code>https://www.example.com/payment/paytm/webhook</code>
+        </li>
+        <img src="screenshots/provider-webhooks.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+    </ol>
+
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on Odoo</h4>
+
+    <ol>
+        <li>Install the module from the Apps menu.</li>
+        <li>
+            Now, navigate to the Payment providers by going to either:
+            <ul>
+                <li>Accounting &#8594; Configuration &#8594; Payment Providers</li>
+                <li>Website &#8594; Configuration &#8594; Payment Providers</li>
+                <li>Sales &#8594; Configuration &#8594; Payment Providers</li>
+            </ul>
+
+            <img src="screenshots/payment-providers-odoo.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+        </li>
+        <li>
+            Select the provider and configure the Credentials tab.
+        </li>
+        <img src="screenshots/provider-setup.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+        <li>Set the State to <strong style="font-weight: bold;">Enabled</strong>.</li>
+    </ol>
+
+    <p class="mt-3">
+        After configuring the details, On your website checkout page, you will see the <strong style="font-weight: bold;">Paytm payment methods</strong>
+        (UPI, Card, Netbanking, etc.) based on the configuration you have set in the Payment Provider.
+    </p>
+    <img src="screenshots/provider-ecommerce.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Support</h4>
+    <p>
+        For any queries or support needs, kindly schedule an appointment via the link below. This will allow our team to address your concerns directly and provide the necessary guidance:
+        <br />
+        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
+            <code>https://www.odoo.com/book/india-payment-provider</code>
+        </a>
+    </p>
+</div>

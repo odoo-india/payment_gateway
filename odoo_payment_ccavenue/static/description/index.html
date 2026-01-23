@@ -1,0 +1,115 @@
+<div class="container mt-4" style="font-size: 16px;">
+
+    <h2 class="oe_slogan mb-3" style="font-weight: bold; color: currentColor;">CCAvenue Payment Gateway Integration</h2>
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on the CCAvenue dashboard</h4>
+
+    <h5 class="mt-3" style="font-size: 20px;">How to Access Credentials?</h5>
+    <p class="mb-1">
+        For your onboarding, we invite you to book an appointment using the link provided. During this session, our team will guide you through the onboarding steps and assist with any setup or clarification you may need:
+        <br />
+        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
+            <code>https://www.odoo.com/book/india-payment-provider</code>
+        </a>
+    </p>
+
+    <p class="mb-0">
+       Upon signing in into your CCAvenue dashboard, navigate to <strong style="font-weight: bold;">Settings &#8594; API Keys</strong> (located in the top-right corner) where you would find your <strong style="font-weight: bold;">Production environment credentials</strong>.
+    </p>
+
+    <p class="mt-2 mb-0">
+        <strong style="font-weight: bold;">Please note:</strong> Sandbox (UAT) credentials will be shared directly by the CCAvenue support team.
+    </p>
+
+    <p class="mt-2 mb-0">
+        Make sure to note your <strong style="font-weight: bold;">Environment</strong> - use the <strong style="font-weight: bold;">Sandbox (UAT)</strong> credentials for testing and switch to <strong style="font-weight: bold;">Production</strong> once you're ready to go live.
+    </p>
+    <img src="screenshots/provider-credentials.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+    <h5 class="mt-4" style="font-size: 20px;">Payment Gateway Access</h5>
+    <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <p class="mb-2">
+            <strong style="font-weight: bold;">For Production Environment: </strong><br/>
+            Your database URL (e.g., <code>https://example.com/</code>) must be registered for this merchant account which will be verified before displaying any of the CCAvenue online ordering screens. 
+            Requests from any other urls for this merchant account will not be processed.
+        </p>
+        <p class="mb-0">
+            <strong style="font-weight: bold;">For Sandbox (UAT) Environment:</strong><br/>
+            Your database URL must also be whitelisted separately in the staging environment by ccavenue support team to initiate payment transactions during testing.
+        </p>
+    </div>
+
+    <h5 class="mt-4" style="font-size: 20px;">Configure Webhook</h5>
+    <ol class="px-3">
+        <li>Log in to your CCAvenue Merchant Dashboard.</li>
+        <li>From top right, click the <strong style="font-weight: bold;">Settings</strong> option.</li>
+        <li>Go to the <strong style="font-weight: bold;">Dynamic Event Notifications</strong>, click on it.</li>
+        <li>
+            Under <strong style="font-weight: bold;">Order status echo URL</strong>, add your Odoo database URL followed by
+            <code>/payment/ccavenue/webhook</code>
+            <br>
+            For example: <code>https://www.example.com/payment/ccavenue/webhook</code>
+        </li>
+        <img src="screenshots/provider-webhooks.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+    </ol>
+
+    <div class="alert alert-info" style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin-top: 20px;">
+        <p class="mb-0">
+            <strong style="font-weight: bold;">Note for Sandbox (UAT) Webhooks:</strong><br/>
+            On CCAvenue Merchant Dashboard, the webhook configuration in <strong>Settings &#8594; Dynamic Event Notifications</strong> points to the <strong>Production environment</strong> only. 
+            To configure webhooks for the <strong>Sandbox (UAT) environment</strong>, you must contact the CCAvenue support team directly to set up your webhook URL.
+        </p>
+    </div>
+
+    <h5 class="mt-4" style="font-size: 20px;">Refund Configuration</h5>
+    <div class="alert alert-warning" style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <p class="mb-0">
+            If you plan to process refunds through CCAvenue (in either Sandbox/UAT or Production), Merchant must provide CCAvenue with the public IP address from where the Refund API calls will be initiated.
+            Refund API calls will work only after CCAvenue whitelists the IP address provided.
+        </p>
+        <p class="mb-0 mt-2">
+            Refund processing status is updated via a scheduled polling mechanism.<br/>
+            Corresponding scheduled action can be found under <strong>Settings &rarr; Technical &rarr; Automation &rarr; Scheduled Actions</strong>
+            with the name <strong>Payment: CCAvenue Poll Payment Status</strong>
+        </p>
+    </div>
+
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on Odoo</h4>
+
+    <ol>
+        <li>Install the module from the Apps menu.</li>
+        <li>
+            Now, navigate to the Payment providers by going to either:
+            <ul>
+                <li>Accounting &#8594; Configuration &#8594; Payment Providers</li>
+                <li>Website &#8594; Configuration &#8594; Payment Providers</li>
+                <li>Sales &#8594; Configuration &#8594; Payment Providers</li>
+            </ul>
+
+            <img src="screenshots/payment-providers-odoo.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+        </li>
+        <li>
+            Select the provider and configure the Credentials tab.
+        </li>
+        <img src="screenshots/provider-setup.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+        <li>Set the State to <strong style="font-weight: bold;">Enabled</strong>.</li>
+    </ol>
+
+    <p class="mt-3">
+        After configuring the details, On your website checkout page, you will see the <strong style="font-weight: bold;">CCAvenue payment methods</strong>
+        (UPI, Card, Netbanking, etc.) based on the configuration you have set in the Payment Provider.
+    </p>
+    <img src="screenshots/provider-ecommerce.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Support</h4>
+    <p>
+        For any queries or support needs, kindly schedule an appointment via the link below. This will allow our team to address your concerns directly and provide the necessary guidance:
+        <br />
+        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
+            <code>https://www.odoo.com/book/india-payment-provider</code>
+        </a>
+    </p>
+</div>
