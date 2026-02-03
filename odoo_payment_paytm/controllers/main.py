@@ -48,6 +48,9 @@ class PaytmController(http.Controller):
             'paytm', data
         )
 
+        if not tx_sudo:
+            return ''  # Acknowledge the webhook
+
         # 'payment status' webhook
         if 'CHECKSUMHASH' in data:
             is_valid_checksum = paytm_utils.verifySignature(

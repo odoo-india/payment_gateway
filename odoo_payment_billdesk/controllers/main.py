@@ -28,7 +28,8 @@ class BilldeskController(Controller):
             tx_sudo = request.env['payment.transaction'].sudo()._search_by_reference(
                 'billdesk', data
             )
-            tx_sudo._set_canceled()
+            if tx_sudo:
+                tx_sudo._set_canceled()
         return request.redirect('/payment/status')
 
     @route(WEBHOOK_URL, type='http', auth='public', methods=['POST'], csrf=False)
@@ -61,5 +62,7 @@ class BilldeskController(Controller):
         tx_sudo = request.env['payment.transaction'].sudo()._search_by_reference(
             'billdesk', payload
         )
-        tx_sudo._process('billdesk', payload)
+
+        if tx_sudo:
+            tx_sudo._process('billdesk', payload)
         return request.make_json_response("")

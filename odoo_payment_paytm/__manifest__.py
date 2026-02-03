@@ -5,7 +5,7 @@
     'version': '19.0.1.0',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
-    'summary': "Paytm payment provider covering India",
+    'summary': "A payment provider covering India",
     'description': " ",  # Non-empty string to avoid loading the README file.,
     'website': "https://www.odoo.com/",
     'images': ['static/description/banner.jpg'],

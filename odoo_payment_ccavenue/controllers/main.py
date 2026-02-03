@@ -76,7 +76,8 @@ class CCavenueController(http.Controller):
         )
         # Process the transaction using the _process method
         tx_sudo = request.env['payment.transaction'].sudo()._search_by_reference('ccavenue', decrypted_data)
-        tx_sudo._process('ccavenue', decrypted_data)
+        if tx_sudo:
+            tx_sudo._process('ccavenue', decrypted_data)
 
         return ''
 

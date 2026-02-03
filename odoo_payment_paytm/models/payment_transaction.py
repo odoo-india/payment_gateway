@@ -5,6 +5,7 @@ import json
 from odoo import api, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.logging import get_payment_logger
 
 from odoo.addons.odoo_payment_paytm import const
@@ -16,6 +17,29 @@ _logger = get_payment_logger(__name__)
 class PaymentTransaction(models.Model):
 
     _inherit = 'payment.transaction'
+
+    def _compute_reference(self, provider_code, prefix=None, separator='-', **kwargs):
+        """Override of `payment` to ensure that paytm's requirements for references are satisfied.
+
+        paytm's requirements for transaction are as follows:
+        - References can only be made of alphanumeric characters and/or '-' and '_'.
+          The prefix is generated with 'ptm'. This prevents the prefix from being
+          generated based on document names that may contain non-allowed characters
+          (eg: INV/2020/...).
+
+        :param str provider_code: The code of the provider handling the transaction.
+        :param str prefix: The custom prefix used to compute the full reference.
+        :param str separator: The custom separator used to separate the prefix from the suffix.
+        :return: The unique reference for the transaction.
+        :rtype: str
+        """
+        if provider_code != 'paytm':
+            return super()._compute_reference(provider_code, prefix=prefix, separator=separator, **kwargs)
+        is_refund = prefix and prefix.startswith('R-')
+        prefix = 'ptm-' if not is_refund else 'R-ptm-'
+        seperator = ''
+        prefix = payment_utils.singularize_reference_prefix(prefix=prefix, separator=seperator)
+        return super()._compute_reference(provider_code, prefix=prefix, separator=separator, **kwargs)
 
     def _paytm_prepare_initiate_payment_payload(self):
         pm_code = (self.payment_method_id.primary_payment_method_id or self.payment_method_id).code
@@ -105,6 +129,7 @@ class PaymentTransaction(models.Model):
             return super()._search_by_reference(provider_code, payment_data)
 
         reference = payment_data.get('ORDERID')
+        tx = self
         if reference:
             tx = self.search([('reference', '=', reference), ('provider_code', '=', 'paytm')])
         else:
@@ -141,17 +166,18 @@ class PaymentTransaction(models.Model):
             return super()._apply_updates(payment_data)
 
         body = payment_data.get('body', {})
+        allowed_to_modify = self.state not in ('done', 'authorized')
         # if payment_data is 'ORDERID key exists' it means this is from payment status webhook
         if payment_data.get('ORDERID'):
             # orderId exists in payment_data it means this payment_data is from webhook
             payment_mode = payment_data.get('PAYMENTMODE')
             payment_mode_code = const.PAYMENT_METHODS_MAPPING.get(payment_mode, '')
             payment_method = self.env['payment.method']._get_from_code(payment_mode_code)
-            if payment_method:
+            if payment_method and allowed_to_modify:
                 self.payment_method_id = payment_method
 
             tracking_id = payment_data.get('TXNID')
-            if tracking_id:
+            if tracking_id and allowed_to_modify:
                 self.provider_reference = tracking_id
 
             status = payment_data.get('STATUS')
@@ -176,7 +202,7 @@ class PaymentTransaction(models.Model):
             code = result_info.get('resultCode')
             message = result_info.get('resultMsg')
             refund_tracking_id = body.get('refundId')
-            if refund_tracking_id:
+            if refund_tracking_id and allowed_to_modify:
                 self.provider_reference = refund_tracking_id
             self._set_pending(state_message=f"Refund request is pending: {message} (code: {code})")
 

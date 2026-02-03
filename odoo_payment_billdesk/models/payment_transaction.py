@@ -4,6 +4,7 @@ from odoo import _, models
 from odoo.http import request
 from odoo.exceptions import ValidationError
 
+from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.logging import get_payment_logger
 
 from odoo.addons.odoo_payment_billdesk import const as billdesk_const
@@ -17,6 +18,24 @@ _logger = get_payment_logger(__name__)
 
 class PaymentTransaction(models.Model):
     _inherit = "payment.transaction"
+
+    def _compute_reference(self, provider_code, prefix=None, separator='-', **kwargs):
+        """Override of `payment` to ensure that BillDesk references are unique.
+
+        :param str provider_code: The code of the provider handling the transaction.
+        :param str prefix: The custom prefix used to compute the full reference.
+        :param str separator: The custom separator used to separate the prefix from the suffix.
+        :return: The unique reference for the transaction.
+        :rtype: str
+        """
+        if provider_code != 'billdesk':
+            return super()._compute_reference(provider_code, prefix, separator, **kwargs)
+        is_refund = prefix and prefix.startswith('R-')
+        prefix = 'bd-' if not is_refund else 'R-bd-'
+        prefix = payment_utils.singularize_reference_prefix(prefix=prefix, separator='')
+        return super()._compute_reference(
+            provider_code, prefix=prefix, separator='', **kwargs
+        )
 
     def _get_specific_processing_values(self, processing_values):
         """Override of `payment` to return billdesk-specific processing values.
@@ -90,6 +109,7 @@ class PaymentTransaction(models.Model):
                 "user_agent": request.httprequest.headers.get("User-Agent", ""),
                 "accept_header": request.httprequest.headers.get("Accept", ""),
             },
+            "additional_info": {f"additonal_info{i}": "na" for i in range(1, 8)},
             "ru": return_url,
         }
         return payload
@@ -200,7 +220,7 @@ class PaymentTransaction(models.Model):
             _logger.warning(
                 "The transaction with reference %s underwent an error. Reason: %s",
                 self.reference,
-                payment_data.get('error_message'),
+                payment_data.get('transaction_error_desc'),
             )
             self._set_error(
                 "An error occurred during the processing of your payment. Please try again."

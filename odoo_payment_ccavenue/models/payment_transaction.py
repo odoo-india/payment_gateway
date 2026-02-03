@@ -5,6 +5,7 @@ import json
 from odoo import models
 from odoo.tools.urls import urljoin as url_join
 
+from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.logging import get_payment_logger
 
 from odoo.addons.odoo_payment_ccavenue import const
@@ -18,6 +19,29 @@ _logger = get_payment_logger(__name__)
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
+
+    def _compute_reference(self, provider_code, prefix=None, separator='-', **kwargs):
+        """Override of `payment` to ensure that ccavenue's requirements for references are satisfied.
+
+        ccavenue's requirements for transaction are as follows:
+        - References can only be made of alphanumeric characters only.
+          The prefix is generated with 'CC'. This prevents the prefix from being
+          generated based on document names that may contain non-allowed characters
+          (eg: INV/2020/...).
+
+        :param str provider_code: The code of the provider handling the transaction.
+        :param str prefix: The custom prefix used to compute the full reference.
+        :param str separator: The custom separator used to separate the prefix from the suffix.
+        :return: The unique reference for the transaction.
+        :rtype: str
+        """
+        if provider_code != 'ccavenue':
+            return super()._compute_reference(provider_code, prefix=prefix, separator=separator, **kwargs)
+        is_refund = prefix and prefix.startswith('R-')
+        prefix = 'CC' if not is_refund else 'RCC'
+        seperator = ''
+        prefix = payment_utils.singularize_reference_prefix(prefix=prefix, separator=seperator)
+        return super()._compute_reference(provider_code, prefix=prefix, separator=separator, **kwargs)
 
     def _ccavenue_prepare_order_payload(self):
         """
@@ -123,6 +147,7 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'ccavenue':
             return super()._apply_updates(payment_data)
 
+        allowed_to_modify = self.state not in ('done', 'authorized')
         # Handle Refund status polling
         if 'refund_list' in payment_data:
             # CCAvenue returns a list of refunds per order;
@@ -175,14 +200,14 @@ class PaymentTransaction(models.Model):
         tracking_id = payment_data.get('tracking_id')
 
         # Update the provider reference
-        if tracking_id:
+        if tracking_id and allowed_to_modify:
             self.provider_reference = tracking_id
 
         # Payment mode update (for payment only)
         payment_mode = payment_data.get('payment_mode')
         payment_mode_code = const.PAYMENT_METHODS_CODE_MAPPING.get(payment_mode, '')
         payment_method = self.env['payment.method']._get_from_code(payment_mode_code)
-        if payment_method:
+        if payment_method and allowed_to_modify:
             self.payment_method_id = payment_method
 
         # Payment processing

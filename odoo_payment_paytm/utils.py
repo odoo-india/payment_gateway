@@ -58,14 +58,17 @@ def generateSignature(params, key):
 
 
 def verifySignature(params, key, checksum):
-    if type(params) is not dict and type(params) is not str:
-        raise Exception('string or dict expected, ' + str(type(params)) + ' given')
-    if 'CHECKSUMHASH' in params:
-        del params['CHECKSUMHASH']
+    try:
+        if type(params) is not dict and type(params) is not str:
+            raise Exception('string or dict expected, ' + str(type(params)) + ' given')
+        if 'CHECKSUMHASH' in params:
+            del params['CHECKSUMHASH']
 
-    if type(params) is dict:
-        params = getStringByParams(params)
-    return verifySignatureByString(params, key, checksum)
+        if type(params) is dict:
+            params = getStringByParams(params)
+        return verifySignatureByString(params, key, checksum)
+    except (ValueError, AttributeError, TypeError):
+        return False
 
 
 def generateSignatureByString(params, key):
