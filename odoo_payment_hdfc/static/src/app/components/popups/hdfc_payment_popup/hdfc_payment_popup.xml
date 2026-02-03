@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="odoo_payment_hdfc.HDFCPaymentPopop">
+            <t t-log="'HDFC Payment Dialog'"/>
+        <Dialog
+            size="'md'"
+            footer="false"
+            fullscreen="true"
+            bodyClass="'w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4'">
+            <t t-set-slot="header">
+                <div class="position-relative w-100">
+
+                    <!-- Header content -->
+                    <div class="d-flex align-items-center justify-content-between py-2">
+
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="/odoo_payment_hdfc/static/description/icon.png"
+                                style="height: 40px;" />
+                            <h3 class="m-0" style="font-weight:bold; color:#004080;">
+                                HDFC Payment
+                            </h3>
+                        </div>
+
+                        <div t-on-click="confirmClosePopup" type="button" class="btn-close" aria-label="Close"/>
+                    </div>
+
+                </div>
+                <div t-if="props.txnEnv == 'test'" class="hdfc-payment-ribbon hdfc-payment-ribbon-top-right">
+                    <span class="text-bg-warning">TEST MODE</span>
+                </div>
+            </t>
+
+
+            <!-- Body -->
+            <div class="text-center">
+                <p class="fs-5 mb-3" style="color:#333;">
+                    Scan this QR code using any UPI app
+                </p>
+
+                <div class="p-3 rounded shadow-sm bg-white"
+                     style="display:inline-block; border:1px solid #ececec;">
+                    <img class="w-100" style="max-width:350px;"
+                         t-att-src="props.qrCode"
+                         alt="HDFC QR Code"/>
+                </div>
+                <div class="mt-4">
+                    <div class="fs-5 fw-bold" style="color:#004080;">
+                        Amount:
+                        <span class="text-dark" t-esc="props.formattedAmount"/>
+                    </div>
+
+                    <div class="mt-1 text-muted">
+                        Order Reference:
+                        <span class="fw-semibold" t-esc="props.orderRef"/>
+                    </div>
+                </div>
+            </div>
+
+        </Dialog>
+    </t>
+</templates>

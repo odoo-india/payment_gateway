@@ -24,7 +24,7 @@ class PaymentProvider(models.Model):
         groups='base.group_system',
         help="Paytm Merchant ID",
         required_if_provider='paytm',
-        string="Merchant ID",
+        string="Paytm Merchant ID",
     )
 
     paytm_merchant_key = fields.Char(
@@ -32,7 +32,7 @@ class PaymentProvider(models.Model):
         groups='base.group_system',
         help="Paytm Merchant Key",
         required_if_provider='paytm',
-        string="Merchant Key",
+        string="Paytm Merchant Key",
     )
 
     def _compute_feature_support_fields(self):

@@ -6,9 +6,9 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position="inside">
-                <group string="Paytm Credentials" invisible="code != 'paytm'">
-                    <field name="paytm_merchant_id" required="code == 'paytm' and state != 'disabled'" password="True"/>
-                    <field name="paytm_merchant_key" required="code == 'paytm' and state != 'disabled'" password="True"/>
+                <group name="paytm_credentials" invisible="code != 'paytm'">
+                    <field string="Merchant ID" name="paytm_merchant_id" required="code == 'paytm' and state != 'disabled'" password="True"/>
+                    <field string="Merchant Key" name="paytm_merchant_key" required="code == 'paytm' and state != 'disabled'" password="True"/>
                 </group>
             </group>
         </field>

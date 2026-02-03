@@ -27,21 +27,21 @@ class PaymentProvider(models.Model):
         groups='base.group_system',
         help='CCAvenue Merchant ID',
         required_if_provider='ccavenue',
-        string='Merchant ID',
+        string='CCAvenue Merchant ID',
     )
     ccavenue_access_code = fields.Char(
         copy=False,
         groups='base.group_system',
         help='CCAvenue Access Code',
         required_if_provider='ccavenue',
-        string='Access Code',
+        string='CCAvenue Access Code',
     )
     ccavenue_working_key = fields.Char(
         copy=False,
         groups='base.group_system',
         help='CCAvenue Working Key for encryption',
         required_if_provider='ccavenue',
-        string='Working Key',
+        string='CCAvenue Working Key',
     )
 
     def _compute_feature_support_fields(self):

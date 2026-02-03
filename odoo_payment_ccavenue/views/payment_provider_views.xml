@@ -6,10 +6,10 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position="inside">
-                <group string="CCAvenue Credentials" invisible="code != 'ccavenue'">
-                    <field name="ccavenue_merchant_id" required="code == 'ccavenue' and state != 'disabled'"/>
-                    <field name="ccavenue_access_code" required="code == 'ccavenue' and state != 'disabled'" password="True"/>
-                    <field name="ccavenue_working_key" required="code == 'ccavenue' and state != 'disabled'" password="True"/>
+                <group name="ccavenue_credentials" invisible="code != 'ccavenue'">
+                    <field string="Merchant ID" name="ccavenue_merchant_id" required="code == 'ccavenue' and state != 'disabled'"/>
+                    <field string="Access Code" name="ccavenue_access_code" required="code == 'ccavenue' and state != 'disabled'" password="True"/>
+                    <field string="Working Key" name="ccavenue_working_key" required="code == 'ccavenue' and state != 'disabled'" password="True"/>
                 </group>
             </group>
         </field>
