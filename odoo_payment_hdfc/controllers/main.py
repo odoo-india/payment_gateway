@@ -1,6 +1,6 @@
 import pprint
-import re
 
+from odoo.addons.odoo_payment_hdfc import const as hdfc_const
 from odoo.addons.odoo_payment_hdfc import utils as hdfc_utils
 from odoo.addons.payment.logging import get_payment_logger
 from odoo.fields import Command
@@ -46,28 +46,35 @@ class HDFCController(Controller):
             _logger.warning('pgMerchantId not found:\n%s', pprint.pformat(payload))
             return 'NO pgMerchantId', 400
 
-        # Todo: Decrypt the HDFC response
         merchant_info = HDFCController._extract_merchant_info(merchant_id)
-        hdfc_payload = hdfc_utils.decrypt_response(merchant_response, merchant_info.hdfc_merchant_key)
-        hdfc_payload_parsed = HDFCController.parse_callback_response(hdfc_payload)
-        # Todo: Verify the response
-        # Identify the event type: payment or refund
-        # Todo: Extract for Refund
+        if not merchant_info:
+            _logger.warning('No Merchant found with the given credentials: %s', merchant_id)
+            return request.make_json_response('')
+
+        try:
+            hdfc_payload = hdfc_utils.decrypt_response(merchant_response, merchant_info.hdfc_merchant_key)
+        except ValueError:
+            _logger.warning('Decryption failed, Invalid Response')
+            return request.make_json_response('')
+        try:
+            hdfc_payload_parsed = HDFCController.parse_callback_response(hdfc_payload)
+        except ValueError:
+            _logger.warning('Parsing failed, Invalid Response')
+            return request.make_json_response('')
+
         event_type = 'payment' if 'txn_meta' in hdfc_payload_parsed and hdfc_payload_parsed.get('txn_meta')[0] == 'PAY' else 'refund'
-        # event_type = 'payment'
+
         if not event_type:
             _logger.warning('Missing event type in HDFC payload.')
             return request.make_json_response('')
-        # Todo: Check the suffix
+
         payment_flow = HDFCController._extract_payment_flow(hdfc_payload_parsed)
 
-        # Remove the payment flow suffix from order_no
-        hdfc_payload_parsed['order_no'] = re.sub(r'_\d+$', '', hdfc_payload_parsed.get('order_no'))
-        if payment_flow == '0':
-            # _0: Normal Flow
+        if payment_flow == 0:
+            # 0: Normal Flow
             HDFCController._process_sale_order(hdfc_payload_parsed)
-        elif payment_flow == '1':
-            # _1: Invoice flow
+        elif payment_flow == 1:
+            # 1: Invoice flow
             HDFCController._process_invoice(hdfc_payload_parsed)
 
         # Always return empty string as acknowledgment
@@ -109,9 +116,11 @@ class HDFCController(Controller):
     @staticmethod
     def _extract_payment_flow(hdfc_payload_parsed):
         order_no = hdfc_payload_parsed.get('order_no')
-        match = re.search(r'_(\d+)$', order_no)
-        payment_flow = match.group(1) if match else None
-        return payment_flow
+
+        if order_no.startswith(hdfc_const.HDFC_INV_REF_PREFIX):
+            return 1
+        else:
+            return 0
 
     @staticmethod
     def _process_invoice(hdfc_payload_parsed):
@@ -119,32 +128,29 @@ class HDFCController(Controller):
 
         # Get invoice
         invoice = env['account.move'].sudo().search([
-            ('payment_reference', '=', hdfc_payload_parsed.get('order_no'))
+            ('hdfc_txn_id', '=', hdfc_payload_parsed.get('order_no'))
         ], limit=1)
 
         if not invoice:
-            _logger.error(
-                'Invoice not found for order_no: %s',
-                hdfc_payload_parsed.get('order_no')
-            )
+            _logger.warning('Invoice not found for order_no: %s', hdfc_payload_parsed.get('order_no'))
             return False
 
         # Get HDFC provider
-        provider = env['payment.provider']._get_hdfc_payment_provider(
+        provider = env['payment.provider'].sudo()._get_hdfc_payment_provider(
             company_id=invoice.company_id.id
         )
         if not provider:
-            _logger.error('HDFC provider not found')
+            _logger.warning('HDFC provider not found')
             return False
 
         # Get UPI payment method
-        upi_method = env['payment.method'].search([
+        upi_method = env['payment.method'].sudo().search([
             ('id', 'in', provider.payment_method_ids.ids),
             ('code', '=', 'upi')
         ], limit=1)
 
         if not upi_method:
-            _logger.error('UPI payment method not found for HDFC provider')
+            _logger.warning('UPI payment method not found for HDFC provider')
             return False
 
         # Create transaction
@@ -152,7 +158,7 @@ class HDFCController(Controller):
             'provider_id': provider.id,
             'payment_method_id': upi_method.id,
             'reference': hdfc_payload_parsed.get('order_no'),
-            'amount': float(hdfc_payload_parsed.get('amount', 0.0)),
+            'amount': invoice.amount_residual,
             'currency_id': invoice.currency_id.id,
             'partner_id': invoice.partner_id.id,
             'state': 'draft',

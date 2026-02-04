@@ -32,13 +32,16 @@ class PaytmController(http.Controller):
         # Redirect user to payment/status page
         return request.redirect('/payment/status')
 
-    @http.route(_webhook_url, type='http', auth='public', methods=['GET', 'POST'], csrf=False, save_session=False)
+    @http.route(_webhook_url, type='http', auth='public', methods=['POST'], csrf=False, save_session=False)
     def paytm_webhook(self, **post):
         """
         Process the payment data sent by Paytm via webhook
         :param dict post: The POST data sent by Paytm
         """
-        data = post if post else request.get_json_data()
+        try:
+            data = post if post else request.get_json_data()
+        except json.JSONDecodeError:  # should not happen
+            return ''
 
         _logger.info(
             'Notification received from Paytm webhook URL with data:\n%s', pprint.pformat(data)

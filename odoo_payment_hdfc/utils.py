@@ -48,8 +48,17 @@ def decrypt_response(merchant_response, merchant_key):
     cipher = Cipher(algorithms.AES(key_bytes), modes.ECB())
     decryptor = cipher.decryptor()
     decrypted = decryptor.update(encrypted_bytes) + decryptor.finalize()
-    decrypted = pkcs7_unpad(decrypted)
-    return decrypted.decode('utf-8')
+    try:
+        decrypted = pkcs7_unpad(decrypted)
+    except ValueError:
+        raise ValueError("PKCS7 unpadding failed (invalid key or corrupted payload)")
+
+    decrypted_text = decrypted.decode('utf-8')
+
+    if not decrypted_text.strip():
+        raise ValueError("Empty decrypted response")
+
+    return decrypted_text
 
 
 def pkcs7_unpad(data: bytes):

@@ -7,12 +7,11 @@
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
-                <group invisible="code != 'hdfc'"
-                       name="hdfc_credentials">
-                       <field name="hdfc_merchant_id" required="code == 'hdfc' and state != 'disabled'" />
-                       <field name="hdfc_merchant_name" required="code == 'hdfc' and state != 'disabled'" />
-                       <field name="hdfc_merchant_key" required="code == 'hdfc' and state != 'disabled'" password="1"/>
-                       <field name="hdfc_merchant_vpa" required="code == 'hdfc' and state != 'disabled'" />
+                <group invisible="code != 'hdfc'" name="hdfc_credentials">
+                    <field name="hdfc_merchant_id" string="Merchant ID" required="code == 'hdfc' and state != 'disabled'" />
+                    <field name="hdfc_merchant_name" string="Name" required="code == 'hdfc' and state != 'disabled'" />
+                    <field name="hdfc_merchant_key" string="Key" required="code == 'hdfc' and state != 'disabled'" password="1"/>
+                    <field name="hdfc_merchant_vpa" string="VPA" required="code == 'hdfc' and state != 'disabled'" />
                 </group>
             </group>
 

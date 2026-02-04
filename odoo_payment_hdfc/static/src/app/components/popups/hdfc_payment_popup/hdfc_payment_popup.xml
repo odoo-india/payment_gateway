@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
     <t t-name="odoo_payment_hdfc.HDFCPaymentPopop">
-            <t t-log="'HDFC Payment Dialog'"/>
         <Dialog
             size="'md'"
             footer="false"
@@ -11,13 +10,11 @@
                 <div class="position-relative w-100">
 
                     <!-- Header content -->
-                    <div class="d-flex align-items-center justify-content-between py-2">
+                    <div class="ml16 d-flex align-items-center justify-content-between py-2">
 
                         <div class="d-flex align-items-center gap-3">
-                            <img src="/odoo_payment_hdfc/static/description/icon.png"
-                                style="height: 40px;" />
-                            <h3 class="m-0" style="font-weight:bold; color:#004080;">
-                                HDFC Payment
+                            <h3 class="m-0" style="font-weight:bold;">
+                                UPI Payment
                             </h3>
                         </div>
 
@@ -33,27 +30,26 @@
 
             <!-- Body -->
             <div class="text-center">
-                <p class="fs-5 mb-3" style="color:#333;">
-                    Scan this QR code using any UPI app
-                </p>
-
-                <div class="p-3 rounded shadow-sm bg-white"
-                     style="display:inline-block; border:1px solid #ececec;">
-                    <img class="w-100" style="max-width:350px;"
-                         t-att-src="props.qrCode"
-                         alt="HDFC QR Code"/>
-                </div>
-                <div class="mt-4">
-                    <div class="fs-5 fw-bold" style="color:#004080;">
-                        Amount:
-                        <span class="text-dark" t-esc="props.formattedAmount"/>
+                <div class="mb-4">
+                    <div class="fs-4 fw-bold">
+                        Amount
+                        <span class="px-2 text-dark" t-esc="props.formattedAmount"/>
                     </div>
 
                     <div class="mt-1 text-muted">
-                        Order Reference:
+                        Order Ref
                         <span class="fw-semibold" t-esc="props.orderRef"/>
                     </div>
                 </div>
+                <div class="p-4 px-5 rounded shadow-sm bg-white"
+                style="display:inline-block; border: 2px solid #188FA2; background: #D9EFF3 !important;">
+                    <img class="w-100" style="max-width:350px; border-radius: inherit"
+                    t-att-src="props.qrCode"
+                    alt="HDFC QR Code"/>
+                    <p class="fs-5 mb-0 pt-1" style="color: #333;">
+                        Scan me in any UPI app
+                    </p>
+            </div>
             </div>
 
         </Dialog>

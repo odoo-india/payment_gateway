@@ -3,6 +3,7 @@
 import { patch } from "@web/core/utils/patch";
 import { PaymentForm } from "@payment/interactions/payment_form";
 import { HDFCPaymentPopup } from "../app/components/popups/hdfc_payment_popup/hdfc_payment_popup";
+import { formatCurrency } from "@web/core/currency";
 
 patch(PaymentForm.prototype, {
     async _prepareInlineForm(providerId, providerCode, paymentOptionId, methodCode, flow) {
@@ -34,7 +35,7 @@ patch(PaymentForm.prototype, {
     _showHdfcQrDialog(processingValues) {
         const popupProps = {
             qrCode: processingValues?.payload?.qr_image,
-            formattedAmount: "₹ " + processingValues.amount.toLocaleString(),
+            formattedAmount: formatCurrency(processingValues.amount, processingValues.currency_id),
             orderRef: processingValues.reference,
             txnEnv: processingValues.txn_env,
             close: () => {

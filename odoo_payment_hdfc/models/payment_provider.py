@@ -16,25 +16,25 @@ class PaymentProvider(models.Model):
         selection_add=[('hdfc', 'HDFC')], ondelete={'hdfc': 'set default'}
     )
     hdfc_merchant_id = fields.Char(
-        string='Merchant ID',
+        string='HDFC Merchant ID',
         help='The ID solely used to identify the account with HDFC.',
         required_if_provider='hdfc',
         copy=False,
     )
     hdfc_merchant_name = fields.Char(
-        string='Name',
+        string='HDFC Merchant Name',
         help='The Merchant Name registered with HDFC.',
         required_if_provider='hdfc',
         copy=False,
     )
     hdfc_merchant_key = fields.Char(
-        string='Key',
+        string='HDFC Merchant Key',
         help='The Key used for encryption and decryption.',
         required_if_provider='hdfc',
         copy=False,
     )
     hdfc_merchant_vpa = fields.Char(
-        string='VPA',
+        string='HDFC Merchant VPA',
         help='The VPA registered with HDFC.',
         required_if_provider='hdfc',
         copy=False,
@@ -54,8 +54,6 @@ class PaymentProvider(models.Model):
         if self.code == 'hdfc':
             supported_currencies = supported_currencies.filtered(lambda c: c.name in hdfc_const.SUPPORTED_CURRENCIES)
         return supported_currencies
-
-    # === COMPUTE METHODS === #
 
     def _compute_feature_support_fields(self):
         """ Override of `payment` to enable additional features. """

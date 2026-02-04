@@ -3,6 +3,7 @@
 
 PROD_BASE_URL = 'upiv2.hdfcbank.com'
 TEST_BASE_URL = 'upitestv2.hdfcbank.com'
+HDFC_INV_REF_PREFIX = "HDFC//INV/"
 
 # The currencies supported by HDFC - (RN only INR is supported)
 SUPPORTED_CURRENCIES = ['INR']

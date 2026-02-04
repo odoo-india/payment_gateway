@@ -17,6 +17,7 @@ class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
     cust_ref_no = fields.Char(string="Customer Unique Reference Number")
+    invoice_ref_no = fields.Char(string="Unique Invoice reference sequence number")
 
     def _get_specific_processing_values(self, processing_values):
         """Return HDFC-specific values including the QR to frontend."""
@@ -44,7 +45,7 @@ class PaymentTransaction(models.Model):
 
         ver = '01'  # QR Version
         mode = '03' if self.provider_id.state == 'test' else '15'
-        tr = self.reference + '_0'
+        tr = self.reference
         tn = ''  # f'Payment for {self.reference}'
         pn = self.provider_id.hdfc_merchant_name    # Payee Name
         pa = self.provider_id.hdfc_merchant_vpa     # Payee VPA
@@ -66,7 +67,7 @@ class PaymentTransaction(models.Model):
             'qrMedium=06'
         )
 
-        qr_img = qrcode.make(qr_string)
+        qr_img = qrcode.make(qr_string, border=2)
         buffer = BytesIO()
         qr_img.save(buffer, format='PNG')
         qr_base64 = base64.b64encode(buffer.getvalue()).decode()
@@ -113,7 +114,7 @@ class PaymentTransaction(models.Model):
         # Update the provider reference.
         if 'txn_meta' in payment_data and payment_data.get('txn_meta')[0] == 'PAY':
             webhook_type = 'payment'
-        else:       # TODO: Fix about refund
+        else:
             webhook_type = 'refund'
 
         # Update the payment method.
@@ -170,9 +171,6 @@ class PaymentTransaction(models.Model):
         if provider_code != 'hdfc':
             return super()._search_by_reference(provider_code, payment_data)
 
-        # Todo: txnid_key for Refund
-        # if 'txn_meta' in payment_data and isinstance(payment_data.get('txn_meta'), list):
-        #     txn_meta = payment_data.get('txn_meta')
         reference = payment_data.get('order_no').strip()
         return self.search([('reference', '=', reference), ('provider_code', '=', 'hdfc')])
 
@@ -180,7 +178,7 @@ class PaymentTransaction(models.Model):
         """Override of payment to extract the amount and currency from the payment data."""
         if self.provider_code != 'hdfc':
             return super()._extract_amount_data(payment_data)
-        # amount_key = 'amount' if 'pay_type' in payment_data and payment_data.get('pay_type').strip() == 'PAY' else ''
+
         return {
             'amount': float(payment_data.get('amount').strip()),  # HDFC only supports payment API
             'currency_code': 'INR',  # HDFC doesn't provide currency code in webhook data. And this is constant as INR for all.
@@ -204,7 +202,7 @@ class PaymentTransaction(models.Model):
             # Part of Payload
             'merchant_id': self.provider_id.hdfc_merchant_id,
             'new_order_no': self.reference,
-            'original_order_no': self.source_transaction_id.reference + '_0',  # For Sales Order
+            'original_order_no': self.source_transaction_id.reference,
             'original_txn_ref_no': self.source_transaction_id.provider_reference,
             'original_cust_ref_no': self.source_transaction_id.cust_ref_no,
             'remarks': 'Refund',
