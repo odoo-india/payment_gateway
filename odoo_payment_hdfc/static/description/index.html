@@ -5,6 +5,25 @@
     <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on HDFC</h4>
 
     <h5 class="mt-3" style="font-size: 20px;">How to Access Credentials?</h5>
+    <ul class="mb-2">
+        <li>Create HDFC Merchant Account with HDFC Bank.</li>
+        <li>Install and activate the HDFC Payment Gateway in Odoo.</li>
+    </ul>
+
+    <h5 class="mt-3" style="font-size: 20px;">Get Started</h5>
+    <p class="mb-1">
+        To ensure a smooth and hassle-free onboarding experience, we recommend booking an onboarding session with our team.
+        During this session, we will guide you through the complete setup process, help you configure your credentials, and clarify any questions you may have.
+    </p>
+
+    <p class="mb-1">
+        Book your onboarding appointment here:
+        <br />
+        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
+            <code>https://www.odoo.com/book/india-payment-provider</code>
+        </a>
+    </p>
+
     <h5 class="mt-4" style="font-size: 20px;">Pre-requisites and Webhook Configuration</h5>
     <ol class="px-3">
         <li>The merchant must submit a properly filled <b>Merchant Integration Questionnaire (MIQ)</b> to HDFC for onboarding in both UAT and Production environments.</li>
@@ -26,13 +45,6 @@
         </li>
         <li> At last, Merchant integration Team will share the encryption/decryption toolkit (Java, dotNet, PHP) for reference and provide UAT application (apk) for testing.</li>
     </ol>
-    <p class="mb-1">
-        For your onboarding, we invite you to book an appointment using the link provided. During this session, our team will guide you through the onboarding steps and assist with any setup or clarification you may need:
-        <br />
-        <a href="https://www.odoo.com/book/india-payment-provider" target="_blank">
-            <code>https://www.odoo.com/book/india-payment-provider</code>
-        </a>
-    </p>
 
     <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configuration on Odoo</h4>
 
@@ -59,6 +71,34 @@
     </p>
 
     <img src="screenshots/provider-ecommerce.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+
+    <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Configure QR Code on Invoices</h4>
+    <ol>
+        <li>
+            Enable <b>QR Codes</b> Settings:
+            <ul>
+                <li>Settings &#8227; Invoicing &#8227; Customer Payments &#8227; QR Codes</li>
+            </ul>
+            <img src="screenshots/payment-provider-odoo-invoice-setup.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+        </li>
+        <li>
+            In HDFC Payment Provider, Under Configuration<br>
+            Enable <b>Show QR on Invoice</b>
+            <img src="screenshots/provider-invoice-setup.png" class="img-responsive my-3" style="width: 100%; margin-left: auto; margin-right: auto;">
+        </li>
+        <li>
+            The HDFC QR code will be displayed on the invoice PDF when the following conditions are met:
+            <ul>
+                <li>The HDFC payment provider is in <b>Test</b> or <b>Enabled</b> state.</li>
+                <li>The payment provider is <b>Published.</b></li>
+                <li>The <b>"Show QR on Invoice"</b> option is enabled on the HDFC payment provider.</li>
+                <li>The invoice belongs to the <b>same company</b> for which the HDFC provider is configured.</li>
+                <li>The invoice is <b>Posted</b>.</li>
+                <li>The <b>"QR Codes"</b> setting is enabled in <b>Invoicing settings</b>.</li>
+            </ul>
+        </li>
+    </ol>
+
     <h4 class="mt-4 border-bottom pb-3" style="font-size: 24px;">Support</h4>
     <p>
         For any queries or support needs, kindly schedule an appointment via the link below. This will allow our team to address your concerns directly and provide the necessary guidance:

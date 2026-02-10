@@ -1,12 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, fields, models
-from odoo.addons.odoo_payment_hdfc import const as hdfc_const
+from odoo.addons.odoo_payment_hdfc import const as hdfc_consts
 from odoo.addons.odoo_payment_hdfc import utils as hdfc_utils
-from odoo.addons.payment.logging import get_payment_logger
 from odoo.exceptions import ValidationError
-
-_logger = get_payment_logger(__name__)
 
 
 class PaymentProvider(models.Model):
@@ -39,11 +36,11 @@ class PaymentProvider(models.Model):
         required_if_provider='hdfc',
         copy=False,
     )
-
     show_qr_on_invoice = fields.Boolean(
         string='Show QR on Invoice',
         default=False,
-        help='Enable to display the QR code on printed invoices.'
+        help='Enable to display the QR code on printed invoices.',
+        copy=False
     )
 
     # === COMPUTE METHODS === #
@@ -52,7 +49,7 @@ class PaymentProvider(models.Model):
         """ Override of `payment` to return the supported currencies. """
         supported_currencies = super()._get_supported_currencies()
         if self.code == 'hdfc':
-            supported_currencies = supported_currencies.filtered(lambda c: c.name in hdfc_const.SUPPORTED_CURRENCIES)
+            supported_currencies = supported_currencies.filtered(lambda c: c.name in hdfc_consts.SUPPORTED_CURRENCIES)
         return supported_currencies
 
     def _compute_feature_support_fields(self):
@@ -69,9 +66,9 @@ class PaymentProvider(models.Model):
         self.ensure_one()
         if self.code != 'hdfc':
             return super()._get_default_payment_method_codes()
-        return hdfc_const.DEFAULT_PAYMENT_METHOD_CODES
+        return hdfc_consts.DEFAULT_PAYMENT_METHOD_CODES
 
-    def _get_hdfc_payment_provider(self, merchant_id=None, company_id=None):
+    def _get_hdfc_payment_provider(self, merchant_id=None, company_id=None, show_qr_on_invoice=False):
         domain = [
             ('code', '=', 'hdfc'),
             ('state', 'in', ['enabled', 'test']),
@@ -84,6 +81,9 @@ class PaymentProvider(models.Model):
         if merchant_id:
             domain.append(('hdfc_merchant_id', '=', merchant_id))
 
+        if show_qr_on_invoice:
+            domain.append(('show_qr_on_invoice', '=', show_qr_on_invoice))
+
         return self.env['payment.provider'].sudo().search(domain, limit=1)
 
     # === REQUEST HELPERS === #
@@ -93,7 +93,7 @@ class PaymentProvider(models.Model):
         if self.code != 'hdfc':
             return super()._build_request_url(endpoint, **kwargs)
 
-        url_host = hdfc_const.TEST_BASE_URL if self.state == 'test' else hdfc_const.PROD_BASE_URL
+        url_host = hdfc_consts.TEST_BASE_URL if self.state == 'test' else hdfc_consts.PROD_BASE_URL
 
         return f'https://{url_host}{endpoint}'
 
@@ -127,8 +127,7 @@ class PaymentProvider(models.Model):
 
         if len(parts) < 7:
             raise ValidationError(
-                _('Invalid or malformed response received from HDFC:\n%s')
-                % response_content
+                _('Invalid or malformed response received from HDFC')
             )
 
         status_message = parts[5].strip()
@@ -149,12 +148,6 @@ class PaymentProvider(models.Model):
             'payer_vpa': parts[8].strip(),
             'rrn': parts[9].strip(),
             'ref_id': parts[10].strip(),
-            'payer_bank': [
-                parts[10].strip(),
-                parts[10].strip(),
-                parts[10].strip(),
-                parts[10].strip()
-            ],
             'txn_meta': [
                 'REFUND'
             ]
@@ -163,7 +156,8 @@ class PaymentProvider(models.Model):
         return refund_data
 
     def _parse_response_error(self, response):
-        if self.code != 'HDFC':
+        """Override of `payment` to extract the error message from the response."""
+        if self.code != 'hdfc':
             return super()._parse_response_error(response)
         try:
             response_msg = response.text

@@ -16,8 +16,10 @@ _logger = logging.getLogger(__name__)
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
-    cust_ref_no = fields.Char(string="Customer Unique Reference Number")
-    invoice_ref_no = fields.Char(string="Unique Invoice reference sequence number")
+    cust_ref_no = fields.Char(
+        string='Customer Unique Reference Number',
+        readonly=True,
+    )
 
     def _get_specific_processing_values(self, processing_values):
         """Return HDFC-specific values including the QR to frontend."""
@@ -43,31 +45,14 @@ class PaymentTransaction(models.Model):
     def _hdfc_generate_dynamic_qr(self):
         """Generate a dynamic UPI QR for HDFC using transaction data."""
 
-        ver = '01'  # QR Version
-        mode = '03' if self.provider_id.state == 'test' else '15'
-        tr = self.reference
-        tn = ''  # f'Payment for {self.reference}'
-        pn = self.provider_id.hdfc_merchant_name    # Payee Name
-        pa = self.provider_id.hdfc_merchant_vpa     # Payee VPA
-        mc = '6012'     # Merchant Category Code
-        am = str(self.amount)
-        cu = 'INR'      # HDFC supports INR only
-
-        qr_string = (
-            'upi://pay?'
-            f'ver={ver}&'
-            f'mode={mode}&'
-            f'tr={tr}&'
-            f'tn={tn}&'
-            f'pn={pn}&'
-            f'pa={pa}&'
-            f'mc={mc}&'
-            f'am={am}&'
-            f'cu={cu}&'
-            'qrMedium=06'
+        qr_string = hdfc_utils.generate_qr_code(
+            self.provider_id,
+            txn_ref=self.reference,
+            txn_note='',
+            amount=self.amount
         )
 
-        qr_img = qrcode.make(qr_string, border=2)
+        qr_img = qrcode.make(qr_string, border=0)
         buffer = BytesIO()
         qr_img.save(buffer, format='PNG')
         qr_base64 = base64.b64encode(buffer.getvalue()).decode()
@@ -78,36 +63,36 @@ class PaymentTransaction(models.Model):
 
     def _apply_updates(self, payment_data):
         """Override of `payment` to update the transaction based on the payment data.
-        payment_data: {
-            'txn_id': '6409196',
-            'order_no': 'S00003-15',
-            'amount': '500.00',
-            'txn_auth_date': '2025:12:17 04:39:27',
-            'status': 'SUCCESS',
-            'status_desc': 'Transaction success',
-            'resp_code': '00',
-            'approval_no': 'NA',
-            'payer_vpa': 'sumit039@hdfcbank',
-            'rrn': '535101448062',
-            'ref_id': 'NA',
-            'payer_bank': [
-                'Mybene',
-                '857679479890124',
-                'AABE0876543',
-                'NA'
-            ],
-            'txn_meta': [
-                'PAY',
-                'https://upitest.hdfcbank.com',
-                'NA',
-                'HDFC400E09AC55DB44EE803B797122DE136',
-                'NA',
-                ''
-            ],
-            'payee_vpa': 'odooin@hdfcbank',
-            'payer_acc_type': 'NA',
-            'payer_name': 'NA'
-        }
+            Sample payment_data: {
+                'txn_id': '6409196',
+                'order_no': 'S00003-15',
+                'amount': '500.00',
+                'txn_auth_date': '2025:12:17 04:39:27',
+                'status': 'SUCCESS',
+                'status_desc': 'Transaction success',
+                'resp_code': '00',
+                'approval_no': 'NA',
+                'payer_vpa': 'sumit039@hdfcbank',
+                'rrn': '535101448062',
+                'ref_id': 'NA',
+                'payer_bank': [
+                    'Mybene',
+                    '857679479890124',
+                    'AABE0876543',
+                    'NA'
+                ],
+                'txn_meta': [
+                    'PAY',
+                    'https://upitest.hdfcbank.com',
+                    'NA',
+                    'HDFC400E09AC55DB44EE803B797122DE136',
+                    'NA',
+                    ''
+                ],
+                'payee_vpa': 'odooin@hdfcbank',
+                'payer_acc_type': 'NA',
+                'payer_name': 'NA'
+            }
         """
         if self.provider_code != 'hdfc':
             return super()._apply_updates(payment_data)
@@ -132,7 +117,6 @@ class PaymentTransaction(models.Model):
         if entity_status in STATUS_MAPPING['done']:
             self.cust_ref_no = payment_data.get('rrn', '').strip()
             self._set_done()
-
             # Immediately post-process the transaction if it is a refund, as the post-processing
             # will not be triggered by a customer browsing the transaction from the portal.
             if webhook_type == 'refund':
@@ -229,10 +213,6 @@ class PaymentTransaction(models.Model):
                 # Process the verified transaction
                 try:
                     tx_sudo._process('hdfc', response)
-
-                    if not tx_sudo.is_post_processed:
-                        tx_sudo._post_process()
-
                     _logger.info('HDFC transaction processed successfully (Ref: %s)', tx_sudo.reference)
                 except Exception:
                     _logger.exception('Failed to process HDFC transaction')

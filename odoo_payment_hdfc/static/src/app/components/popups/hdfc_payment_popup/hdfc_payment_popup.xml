@@ -5,17 +5,17 @@
             size="'md'"
             footer="false"
             fullscreen="true"
-            bodyClass="'w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4'">
+            bodyClass="'w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4 pb-5'">
             <t t-set-slot="header">
                 <div class="position-relative w-100">
 
                     <!-- Header content -->
-                    <div class="ml16 d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center justify-content-between">
 
                         <div class="d-flex align-items-center gap-3">
-                            <h3 class="m-0" style="font-weight:bold;">
+                            <h4 class="m-0">
                                 UPI Payment
-                            </h3>
+                            </h4>
                         </div>
 
                         <div t-on-click="confirmClosePopup" type="button" class="btn-close" aria-label="Close"/>
@@ -31,19 +31,14 @@
             <!-- Body -->
             <div class="text-center">
                 <div class="mb-4">
-                    <div class="fs-4 fw-bold">
+                    <div class="fs-3 fw-bold">
                         Amount
                         <span class="px-2 text-dark" t-esc="props.formattedAmount"/>
                     </div>
-
-                    <div class="mt-1 text-muted">
-                        Order Ref
-                        <span class="fw-semibold" t-esc="props.orderRef"/>
-                    </div>
                 </div>
-                <div class="p-4 px-5 rounded shadow-sm bg-white"
-                style="display:inline-block; border: 2px solid #188FA2; background: #D9EFF3 !important;">
-                    <img class="w-100" style="max-width:350px; border-radius: inherit"
+                <div class="rounded shadow-sm bg-white"
+                    style="display:inline-block; border: 2px solid #188FA2; background: #D9EFF3 !important; padding: 50px; padding-top: 40px; padding-bottom: 20px;">
+                    <img class="w-100" style="max-width:225px; border-radius: inherit"
                     t-att-src="props.qrCode"
                     alt="HDFC QR Code"/>
                     <p class="fs-5 mb-0 pt-1" style="color: #333;">
