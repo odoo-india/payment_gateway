@@ -17,13 +17,13 @@ class PaymentProvider(models.Model):
         selection_add=[('payu', 'PayU')], ondelete={'payu': 'set default'}
     )
     payu_merchant_key = fields.Char(
-        string='Merchant Key',
+        string='PayU Merchant Key',
         help='The key solely used to identify the account with PayU.',
         required_if_provider='payu',
         copy=False,
     )
     payu_merchant_salt = fields.Char(
-        string='Salt',
+        string='PayU Salt',
         help='The Salt used to generate a hash.',
         required_if_provider='payu',
         copy=False,
