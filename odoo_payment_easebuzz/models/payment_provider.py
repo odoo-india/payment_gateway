@@ -58,10 +58,10 @@ class PaymentProvider(models.Model):
         """ Override of `payment` to build the request URl. """
         if self.code != 'easebuzz':
             return super()._build_request_url(endpoint, mode=mode, **kwargs)
-        if self.state == 'test':
-            subdomain = 'testpay' if mode == 'payment' else 'testdashboard'
-        else:
+        if self.is_live:
             subdomain = 'pay' if mode == 'payment' else 'dashboard'
+        else:
+            subdomain = 'testpay' if mode == 'payment' else 'testdashboard'
         return f'https://{subdomain}.easebuzz.in{endpoint}'
 
     def _build_request_headers(self, *args, mode: Literal['payment', 'refund'] = 'payment', **kwargs):

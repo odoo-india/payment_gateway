@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_method_card" model="payment.method">
+        <field name="name">Card</field>
+        <field name="code">card</field>
+        <field name="sequence">10</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz" />
+        <field name="image" type="bytes" file="payment/static/img/card.png" />
+        <field name="support_refund">partial</field>
+    </record>
+
+     <record id="payment_method_netbanking" model="payment.method">
+        <field name="name">Netbanking</field>
+        <field name="code">netbanking</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz"/>
+        <field name="image" type="bytes" file="payment/static/img/bank.png"/>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+    </record>
+
+    <record id="payment_method_emi_india" model="payment.method">
+        <field name="name">EMI</field>
+        <field name="code">emi_india</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz"/>
+        <field name="image" type="bytes" file="payment/static/img/card.png"/>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+    </record>
+
+    <record id="payment_method_paylater_india" model="payment.method">
+        <field name="name">Pay Later</field>
+        <field name="code">paylater_india</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz"/>
+        <field name="image" type="bytes" file="payment/static/img/pay_later.png"/>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+    </record>
+
+    <record id="payment_method_upi" model="payment.method">
+        <field name="name">UPI</field>
+        <field name="code">upi</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz"/>
+        <field name="image" type="bytes" file="payment/static/img/upi.png"/>
+        <field name="support_refund">partial</field>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+    </record>
+
+    <record id="payment_method_wallets_india" model="payment.method">
+        <field name="name">Wallets India</field>
+        <field name="code">wallets_india</field>
+        <field name="provider_id" ref="odoo_payment_easebuzz.payment_provider_easebuzz"/>
+        <field name="image" type="bytes" file="payment/static/img/wallet.png"/>
+        <field name="supported_country_ids" eval="[Command.set([ref('base.in')])]"/>
+        <field name="supported_currency_ids" eval="[Command.set([ref('base.INR')])]"/>
+    </record>
+
+</odoo>
