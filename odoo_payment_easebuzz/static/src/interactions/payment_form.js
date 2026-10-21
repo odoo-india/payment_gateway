@@ -20,7 +20,7 @@ patch(PaymentForm.prototype, {
      * @param {string} flow - The online payment flow of the selected payment option.
      * @return {void}
      */
-    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {
+    async _prepareInlineForm(providerId, providerCode, _paymentOptionId, _paymentMethodCode, _flow) {
         if (providerCode !== "easebuzz") {
           await super._prepareInlineForm(...arguments);
           return;

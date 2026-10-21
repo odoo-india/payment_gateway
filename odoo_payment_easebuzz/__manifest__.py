@@ -2,7 +2,7 @@
 
 {
     'name': "Payment Provider: Easebuzz",
-    'version': '19.0.1.0',
+    'version': '20.0.1.0',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "A payment provider covering India.",
@@ -13,6 +13,7 @@
     'data': [
         'views/payment_templates_easebuzz.xml',
         'data/payment_provider_data.xml',
+        'data/payment_method_data.xml',
         'views/payment_provider_views.xml',
     ],
     'assets': {

@@ -1,14 +1,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import pprint
 import json
+import pprint
 
 from werkzeug.exceptions import Forbidden
 
 from odoo.http import Controller, request, route
 
+from odoo.addons.odoo_payment_easebuzz import const as easebuzz_const
+from odoo.addons.odoo_payment_easebuzz import utils as easebuzz_utils
 from odoo.addons.payment.logging import get_payment_logger
-from odoo.addons.odoo_payment_easebuzz import utils as easebuzz_utils, const as easebuzz_const
 
 _logger = get_payment_logger(__name__)
 
@@ -44,7 +45,7 @@ class EasebuzzController(Controller):
 
         # Validate request is from Easebuzz
         tx_sudo = request.env['payment.transaction'].sudo()._search_by_reference(
-            'easebuzz', payload
+            'easebuzz', payload,
         )
         hash_sequence_key = 'PAYMENT_WEBHOOK' if webhook_type == 'payment' else 'REFUND_WEBHOOK'
         self._easebuzz_verify_webhook(
@@ -55,7 +56,7 @@ class EasebuzzController(Controller):
         )
 
         # Handle the notification data
-        tx_sudo._process('easebuzz', payload)
+        tx_sudo._record(payload)
 
         return request.make_json_response('')
 

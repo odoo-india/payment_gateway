@@ -6,12 +6,11 @@ import re
 from odoo import _, api, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.odoo_payment_easebuzz import const as easebuzz_const
+from odoo.addons.odoo_payment_easebuzz import utils as easebuzz_utils
+from odoo.addons.odoo_payment_easebuzz.controllers.main import EasebuzzController
 from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment.logging import get_payment_logger
-
-from odoo.addons.odoo_payment_easebuzz import utils as easebuzz_utils
-from odoo.addons.odoo_payment_easebuzz import const as easebuzz_const
-from odoo.addons.odoo_payment_easebuzz.controllers.main import EasebuzzController
 
 _logger = get_payment_logger(__name__)
 
@@ -37,7 +36,7 @@ class PaymentTransaction(models.Model):
             return super()._compute_reference(provider_code, prefix, separator, **kwargs)
         prefix = payment_utils.singularize_reference_prefix(prefix='R-eb-', separator='')
         return super()._compute_reference(
-            provider_code, prefix=prefix, separator='', **kwargs
+            provider_code, prefix=prefix, separator='', **kwargs,
         )
 
     def _get_specific_processing_values(self, processing_values):
@@ -56,7 +55,7 @@ class PaymentTransaction(models.Model):
         return {
             'access_key': access_token,
             'key': self.provider_id.easebuzz_key,
-            'txn_env': 'test' if self.provider_id.state == 'test' else 'prod',
+            'txn_env': 'prod' if self.provider_id.is_live else 'test',
         }
 
     def _easebuzz_create_payment_order(self):
@@ -70,7 +69,7 @@ class PaymentTransaction(models.Model):
         try:
             order_data = self._send_api_request('POST', '/payment/initiateLink', data=payload, mode='payment')
         except ValidationError as e:
-            self._set_error(str(e))
+            self.with_context(payment_safe_write=True)._set_error(str(e))
         return order_data
 
     def _easebuzz_prepare_order_payload(self):
@@ -95,7 +94,7 @@ class PaymentTransaction(models.Model):
             'surl': return_url,
             'furl': return_url,
             'show_payment_mode': showPaymentMode,
-            'salt': self.provider_id.easebuzz_salt  # Delete `salt` key after computing payload hash as it is not required in payload
+            'salt': self.provider_id.easebuzz_salt,  # Delete `salt` key after computing payload hash as it is not required in payload
         }
         hash_payload = easebuzz_utils.compute_hash_payload(payload, easebuzz_const.EASEBUZZ_HASH_SEQUENCE['PAYMENT'])
         payload['hash'] = hash_payload
@@ -112,7 +111,7 @@ class PaymentTransaction(models.Model):
             'merchant_refund_id': self.reference,
             'easebuzz_id': self.source_transaction_id.provider_reference,
             'refund_amount': -self.amount,
-            'salt': self.provider_id.easebuzz_salt  # Delete `salt` key after computing payload hash as it is not required in payload
+            'salt': self.provider_id.easebuzz_salt,  # Delete `salt` key after computing payload hash as it is not required in payload
         }
         hash_payload = easebuzz_utils.compute_hash_payload(payload, easebuzz_const.EASEBUZZ_HASH_SEQUENCE['REFUND'])
         payload['hash'] = hash_payload
@@ -121,7 +120,7 @@ class PaymentTransaction(models.Model):
         try:
             self._send_api_request('POST', '/transaction/v2/refund', data=json.dumps(payload), mode='refund')
         except ValidationError as e:
-            self._set_error(str(e))
+            self.write(payment_safe_write=True)._set_error(str(e))
 
     @api.model
     def _search_by_reference(self, provider_code, payment_data):
@@ -138,8 +137,7 @@ class PaymentTransaction(models.Model):
         webhook_type = payment_data.get('webhook_type')
         reference_key = 'txnid' if webhook_type == 'payment' else 'merchant_refund_id'
         reference = payment_data.get(reference_key, '')
-        tx = self.search([('reference', '=', reference), ('provider_code', '=', 'easebuzz')])
-        return tx
+        return self.search([('reference', '=', reference), ('provider_code', '=', 'easebuzz')])
 
     def _extract_amount_data(self, payment_data):
         """Override of payment to extract the amount and currency from the payment data."""
@@ -177,8 +175,8 @@ class PaymentTransaction(models.Model):
         payment_method_type = payment_data.get('mode', '')
         if not payment_method_type:  # Refund
             payment_method_type = payment_data.get('transaction_type', '')
-        payment_method = self.env['payment.method']._get_from_code(
-            payment_method_type, mapping=easebuzz_const.PAYMENT_METHODS_MAPPING
+        payment_method = self.provider_id._get_pm_from_code(
+            payment_method_type, mapping=easebuzz_const.PAYMENT_METHODS_MAPPING,
         )
         if allowed_to_modify and payment_method:
             self.payment_method_id = payment_method
@@ -202,16 +200,17 @@ class PaymentTransaction(models.Model):
         elif entity_status in STATUS_MAPPING['error']:
             _logger.warning(
                 "The transaction with reference %s underwent an error. Reason: %s",
-                self.reference, payment_data.get('error_message')
+                self.reference, payment_data.get('error_message'),
             )
             self._set_error(
-                "An error occurred during the processing of your payment. Please try again."
+                "An error occurred during the processing of your payment. Please try again.",
             )
         else:  # Classify unsupported payment status as the `error` tx state.
             _logger.warning(
                 "Received data for transaction with reference %s with invalid payment status: %s",
-                self.reference, entity_status
+                self.reference, entity_status,
             )
             self._set_error(
-                f"Easebuzz: Received data with invalid status: {entity_status}"
+                f"Easebuzz: Received data with invalid status: {entity_status}",
             )
+        return None

@@ -11,10 +11,10 @@
                     invisible="code != 'easebuzz'">
                     <field name="easebuzz_key"
                            string="Easebuzz Key"
-                           required="code == 'easebuzz' and state != 'disabled'" />
+                           required="code == 'easebuzz'" />
                      <field name="easebuzz_salt"
                            string="Easebuzz Salt"
-                           required="code == 'easebuzz' and state != 'disabled'"
+                           required="code == 'easebuzz'"
                            password="True" />
                 </group>
             </group>
